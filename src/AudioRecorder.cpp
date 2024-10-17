@@ -1,7 +1,7 @@
 #include "AudioRecorder.h"
 
-AudioRecorder::AudioRecorder(int sampleRate, int framesPerBuffer, int channels, int duration)
-    : recorderData{false, sampleRate, framesPerBuffer, channels, false, std::vector<float>(sampleRate * duration * channels), 0, sampleRate * duration}
+AudioRecorder::AudioRecorder(int sampleRate, int framesPerBuffer, int channels, int duration, RtpClient rtpClient)
+    : recorderData{false, sampleRate, framesPerBuffer, channels, false, std::vector<float>(sampleRate * duration * channels), 0, sampleRate * duration, std::move(rtpClient)}
 {
     // Initialize PortAudio
     PaError err = Pa_Initialize();
@@ -101,6 +101,8 @@ int AudioRecorder::recordCallback(const void *inputBuffer, void *outputBuffer,
     std::cout << framesLeft << " Bytes have been written to the buffer" << '\n';
 
     recorderData->frameIndex += framesLeft;
+
+    recorderData->m_client.sendAudioData(recorderData->recordedSamples, framesLeft * recorderData->channels);
 
     if (recorderData->frameIndex >= recorderData->maxFrameIndex)
     {

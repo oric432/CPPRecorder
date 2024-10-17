@@ -1,6 +1,7 @@
 #ifndef AUDIO_RECORDER_H
 #define AUDIO_RECORDER_H
 
+#include "RtpClient.h"
 #include <portaudio.h>
 #include <iostream>
 #include <vector>
@@ -16,13 +17,14 @@ typedef struct
     std::vector<float> recordedSamples;
     int frameIndex;
     int maxFrameIndex;
+    RtpClient m_client;
     mutable std::mutex mtx;
 } paRecorderData;
 
 class AudioRecorder
 {
 public:
-    AudioRecorder(int sampleRate, int framesPerBuffer, int channels, int duration);
+    AudioRecorder(int sampleRate, int framesPerBuffer, int channels, int duration, RtpClient rtpClient);
     ~AudioRecorder();
 
     bool startRecording();
