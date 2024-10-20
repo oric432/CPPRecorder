@@ -78,18 +78,13 @@ int AudioRecorder::recordCallback(const void *inputBuffer, void *outputBuffer,
 
     float audioData[framesLeft * recorderData->channels];
 
-    if (!currentPTTState || inputBuffer == nullptr)
-    {
-        std::fill(audioData, audioData + framesLeft * recorderData->channels, 0.0f);
-    }
-    else
+    if (currentPTTState && inputBuffer != nullptr)
     {
         std::memcpy(audioData, rptr, framesLeft * sizeof(float) * recorderData->channels);
+        std::cout << framesLeft << " Bytes have been written to the buffer" << '\n';
+
+        recorderData->m_client.sendAudioData(audioData, framesLeft * recorderData->channels);
     }
-
-    std::cout << framesLeft << " Bytes have been written to the buffer" << '\n';
-
-    recorderData->m_client.sendAudioData(audioData, framesLeft * recorderData->channels);
 
     return paContinue;
 }
