@@ -14,9 +14,6 @@ typedef struct
     int framesPerBuffer;
     int channels;
     bool pttPressed;
-    std::vector<float> recordedSamples;
-    int frameIndex;
-    int maxFrameIndex;
     RtpClient m_client;
     mutable std::mutex mtx;
 } paRecorderData;
@@ -24,15 +21,13 @@ typedef struct
 class AudioRecorder
 {
 public:
-    AudioRecorder(int sampleRate, int framesPerBuffer, int channels, int duration, RtpClient rtpClient);
+    AudioRecorder(int sampleRate, int framesPerBuffer, int channels, RtpClient rtpClient);
     ~AudioRecorder();
 
     bool startRecording();
     void stopRecording();
     bool isRecording() const;
     void setPTTState(bool pttPressed); // To control recording based on PTT state
-
-    const std::vector<float> &getRecordedData() const;
 
 private:
     static int recordCallback(const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer,

@@ -1,7 +1,7 @@
 #include "AudioRecorder.h"
 
-AudioRecorder::AudioRecorder(int sampleRate, int framesPerBuffer, int channels, int duration, RtpClient rtpClient)
-    : recorderData{false, sampleRate, framesPerBuffer, channels, false, std::vector<float>(sampleRate * duration * channels), 0, sampleRate * duration, std::move(rtpClient)}
+AudioRecorder::AudioRecorder(int sampleRate, int framesPerBuffer, int channels, RtpClient rtpClient)
+    : recorderData{false, sampleRate, framesPerBuffer, channels, false, std::move(rtpClient)}
 {
     // Initialize PortAudio
     PaError err = Pa_Initialize();
@@ -61,11 +61,6 @@ void AudioRecorder::setPTTState(bool state)
     recorderData.pttPressed = state;
 }
 
-const std::vector<float> &AudioRecorder::getRecordedData() const
-{
-    return recorderData.recordedSamples;
-}
-
 int AudioRecorder::recordCallback(const void *inputBuffer, void *outputBuffer,
                                   unsigned long framesPerBuffer,
                                   const PaStreamCallbackTimeInfo *timeInfo,
@@ -73,9 +68,7 @@ int AudioRecorder::recordCallback(const void *inputBuffer, void *outputBuffer,
 {
     paRecorderData *recorderData = static_cast<paRecorderData *>(userData);
     const float *rptr = static_cast<const float *>(inputBuffer);
-    float *wptr = &recorderData->recordedSamples[recorderData->frameIndex * recorderData->channels];
-    long framesToCalc = recorderData->maxFrameIndex - recorderData->frameIndex;
-    long framesLeft = (framesToCalc < framesPerBuffer) ? framesToCalc : framesPerBuffer;
+    long framesLeft = framesPerBuffer;
 
     bool currentPTTState;
     {
@@ -83,34 +76,20 @@ int AudioRecorder::recordCallback(const void *inputBuffer, void *outputBuffer,
         currentPTTState = recorderData->pttPressed;
     }
 
+    float audioData[framesLeft * recorderData->channels];
+
     if (!currentPTTState || inputBuffer == nullptr)
     {
-        for (long i = 0; i < framesLeft * recorderData->channels; i++)
-        {
-            *wptr++ = 0.0f; // Silence
-        }
+        std::fill(audioData, audioData + framesLeft * recorderData->channels, 0.0f);
     }
     else
     {
-        for (long i = 0; i < framesLeft * recorderData->channels; i++)
-        {
-            *wptr++ = *rptr++; // Audio
-        }
+        std::memcpy(audioData, rptr, framesLeft * sizeof(float) * recorderData->channels);
     }
 
     std::cout << framesLeft << " Bytes have been written to the buffer" << '\n';
 
-    recorderData->frameIndex += framesLeft;
+    recorderData->m_client.sendAudioData(audioData, framesLeft * recorderData->channels);
 
-    recorderData->m_client.sendAudioData(wptr - framesLeft * recorderData->channels, framesLeft * recorderData->channels);
-
-    if (recorderData->frameIndex >= recorderData->maxFrameIndex)
-    {
-        recorderData->recording = false; // Set the recording flag to false in order to stop the main loop
-        return paComplete;
-    }
-    else
-    {
-        return paContinue;
-    }
+    return paContinue;
 }
