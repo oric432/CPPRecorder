@@ -10,7 +10,7 @@
 class AudioFileWriter
 {
 public:
-    void saveToWav(const std::string &filename, const std::vector<float> &audioData, int bitsPerSample, int sampleRate, int numChannels);
+    void saveToWav(const std::string &filename, const int16_t *audioData, size_t dataSize, int bitsPerSample, int sampleRate, int numChannels);
 
 private:
     void writeWavHeader(std::ofstream &outFile, int sampleRate, int numChannels, int bitsPerSample, int dataSize);

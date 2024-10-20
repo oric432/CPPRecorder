@@ -64,7 +64,7 @@ int main(int argc, char **argv)
                                  { io_ctx.run(); });
 
             // Main loop
-            while (keepRunning && recorder.isRecording())
+            while (keepRunning)
             {
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }

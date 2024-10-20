@@ -1,7 +1,7 @@
 #include "AudioFileWriter.h"
 
 // Save the recorded data to a WAV file
-void AudioFileWriter::saveToWav(const std::string &filename, const std::vector<float> &audioData, int bitsPerSample, int sampleRate, int numChannels)
+void AudioFileWriter::saveToWav(const std::string &filename, const int16_t *audioData, size_t dataSize, int bitsPerSample, int sampleRate, int numChannels)
 {
     // Open file in binary mode
     std::ofstream outFile(filename, std::ios::binary);
@@ -15,18 +15,12 @@ void AudioFileWriter::saveToWav(const std::string &filename, const std::vector<f
     // WAV file parameters
     int byteRate = sampleRate * numChannels * bitsPerSample / 8;
     int blockAlign = numChannels * bitsPerSample / 8;
-    int dataSize = audioData.size() * sizeof(int16_t);
 
     // Write the WAV header
     writeWavHeader(outFile, sampleRate, numChannels, bitsPerSample, dataSize);
 
     // Write audio data
-    for (float sample : audioData)
-    {
-        // Convert float sample [-1.0, 1.0] to 16-bit PCM [-32768, 32767]
-        int16_t pcmSample = static_cast<int16_t>(sample * INT16_MAX);
-        outFile.write(reinterpret_cast<const char *>(&pcmSample), sizeof(pcmSample));
-    }
+    outFile.write(reinterpret_cast<const char *>(audioData), dataSize);
 
     outFile.close();
     std::cout << "Audio data saved to " << filename << std::endl;
