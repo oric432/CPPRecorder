@@ -102,7 +102,7 @@ int AudioRecorder::recordCallback(const void *inputBuffer, void *outputBuffer,
 
     recorderData->frameIndex += framesLeft;
 
-    recorderData->m_client.sendAudioData(recorderData->recordedSamples, framesLeft * recorderData->channels);
+    recorderData->m_client.sendAudioData(wptr - framesLeft * recorderData->channels, framesLeft * recorderData->channels);
 
     if (recorderData->frameIndex >= recorderData->maxFrameIndex)
     {

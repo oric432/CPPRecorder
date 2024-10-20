@@ -19,13 +19,12 @@ public:
     RtpClient(RtpClient &&other) noexcept;
     RtpClient &operator=(RtpClient &&other) noexcept;
 
-    void sendAudioData(const std::vector<float> &audioBuffer, size_t length);
+    void sendAudioData(const float *audioBuffer, size_t length);
 
 private:
-    void keepAlive(boost::asio::io_context &io_ctx);
+    void createRTPPacket(uint8_t payloadType, uint16_t sequenceNumber, uint32_t timestamp, uint32_t ssrc, const float *audioData, size_t length, uint8_t *packetBuffer, size_t packetBufferSize);
 
 private:
-    std::vector<uint8_t> createRTPPacket(uint8_t payloadType, uint16_t sequenceNumber, uint32_t timestamp, uint32_t ssrc, const std::vector<float> &audioData, bool marker);
     boost::asio::ip::udp::socket m_socket;
     boost::asio::ip::udp::endpoint m_endpoint;
     uint16_t m_sequenceNumber;
