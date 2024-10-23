@@ -21,12 +21,16 @@ public:
 
     void sendAudioData(const float *audioBuffer, size_t length);
 
+    void setTimestamp(uint32_t timestamp);
+    uint32_t getTimestamp();
+
 private:
-    void createRTPPacket(uint8_t payloadType, uint16_t sequenceNumber, uint32_t timestamp, uint32_t ssrc, const float *audioData, size_t length, uint8_t *packetBuffer, size_t packetBufferSize);
+    void startResetTimer();
 
 private:
     boost::asio::ip::udp::socket m_socket;
     boost::asio::ip::udp::endpoint m_endpoint;
+    boost::asio::steady_timer m_resetTimer;
     uint16_t m_sequenceNumber;
     uint32_t m_timestamp;
     uint32_t m_ssrc;
