@@ -44,9 +44,8 @@ private:
     int16_t m_audioBuffer[MAX_BUFFER_SIZE]{};
     std::chrono::steady_clock::time_point m_serverCreationTime;
     size_t m_fileCount{};
-    std::mutex bufferMutex;
-    boost::asio::steady_timer flush_timer_;
-    boost::asio::io_context &io_ctx;
+    boost::asio::steady_timer m_flushTimer;
+    boost::asio::io_context &m_io_ctx;
 };
 
 #endif // RTP_SERVER_MANAGER_H

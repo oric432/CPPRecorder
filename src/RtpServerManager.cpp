@@ -5,7 +5,7 @@
 #include <thread>
 
 RtpServerManager::RtpServerManager(boost::asio::io_context &io_ctx) : m_serverCreationTime(std::chrono::steady_clock::now()),
-                                                                      io_ctx(io_ctx), flush_timer_(io_ctx, std::chrono::milliseconds(10000))
+                                                                      m_io_ctx(io_ctx), m_flushTimer(io_ctx, std::chrono::milliseconds(DURATION))
 {
     startFlushTimer();
 }
@@ -44,8 +44,6 @@ void RtpServerManager::manageBuffer(uint32_t ssrc, const uint8_t *data, size_t l
     std::cout << "Joined Time (seconds): " << client.joinedTime.count() / 1000 << std::endl;
     std::cout << "Calculated Index: " << index << std::endl;
 
-    std::lock_guard<std::mutex> lock(bufferMutex);
-
     // Allocate a temporary buffer to hold the converted PCM samples
     std::vector<int16_t> pcmBuffer(floatSamplesLength);
 
@@ -82,12 +80,12 @@ void RtpServerManager::manageBuffer(uint32_t ssrc, const uint8_t *data, size_t l
 
 void RtpServerManager::startFlushTimer()
 {
-    flush_timer_.async_wait([this](const boost::system::error_code &ec)
+    m_flushTimer.async_wait([this](const boost::system::error_code &ec)
                             {
             if (!ec) {
                 m_serverCreationTime = std::chrono::steady_clock::now();
                 flushBufferToDisk();
-                flush_timer_.expires_at(flush_timer_.expiry() + std::chrono::milliseconds(10000));
+                m_flushTimer.expires_at(m_flushTimer.expiry() + std::chrono::milliseconds(DURATION));
                 startFlushTimer();
             } });
 }

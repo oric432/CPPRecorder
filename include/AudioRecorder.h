@@ -33,8 +33,8 @@ private:
     static int recordCallback(const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer,
                               const PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags statusFlags, void *userData);
 
-    PaStream *stream;
-    paRecorderData recorderData;
+    PaStream *m_stream;
+    paRecorderData m_recorderData;
 };
 
 #endif // AUDIO_RECORDER_H

@@ -2,8 +2,7 @@
 #include "Utils.h"
 
 RtpClient::RtpClient(boost::asio::io_context &io_ctx, const std::string &host, const std::string &port)
-    : m_socket(io_ctx, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), 0)), m_timestamp(0), m_sequenceNumber(0), m_ssrc(generateSSRC()),
-      m_resetTimer(io_ctx, std::chrono::seconds(10))
+    : m_socket(io_ctx, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), 0)), m_timestamp(0), m_sequenceNumber(0), m_ssrc(generateSSRC())
 {
     boost::asio::ip::udp::resolver resolver(io_ctx);
     boost::asio::ip::udp::resolver::results_type endpoints =
@@ -17,8 +16,7 @@ RtpClient::RtpClient(RtpClient &&other) noexcept
       m_endpoint(std::move(other.m_endpoint)),
       m_sequenceNumber(other.m_sequenceNumber),
       m_timestamp(other.m_timestamp),
-      m_ssrc(other.m_ssrc),
-      m_resetTimer(std::move(other.m_resetTimer))
+      m_ssrc(other.m_ssrc)
 {
 }
 
@@ -31,7 +29,6 @@ RtpClient &RtpClient::operator=(RtpClient &&other) noexcept
         m_sequenceNumber = other.m_sequenceNumber;
         m_timestamp = other.m_timestamp;
         m_ssrc = other.m_ssrc;
-        m_resetTimer = std::move(other.m_resetTimer);
     }
     return *this;
 }
@@ -65,19 +62,6 @@ void RtpClient::sendAudioData(const float *audioBuffer, size_t length)
                            });
     m_sequenceNumber++;
     m_timestamp += length;
-}
-
-void RtpClient::startResetTimer()
-{
-
-    m_resetTimer.async_wait([this](const boost::system::error_code &ec)
-                            {
-            if (!ec) {
-                m_sequenceNumber = 0;
-                m_timestamp = 0;
-                m_resetTimer.expires_at(m_resetTimer.expiry() + std::chrono::seconds(10));
-                startResetTimer();
-            } });
 }
 
 void RtpClient::setTimestamp(uint32_t timestamp)
