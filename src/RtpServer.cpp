@@ -6,6 +6,10 @@ RtpServer::RtpServer(boost::asio::io_context &io_ctx, unsigned short port) : m_s
 {
     std::cout << "Server is up and running" << std::endl;
 }
+RtpServer::~RtpServer()
+{
+    std::cout << "whattttttt" << std::endl;
+}
 
 void RtpServer::recieveDataFromClient()
 {

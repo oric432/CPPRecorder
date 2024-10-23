@@ -25,6 +25,7 @@ public:
 
 public:
     RtpServerManager(boost::asio::io_context &io_ctx);
+    ~RtpServerManager();
 
     void addClient(uint32_t ssrc, rtpClientInfo &client);
     void removeClient(uint32_t ssrc);

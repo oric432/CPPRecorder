@@ -104,3 +104,9 @@ void RtpServerManager::flushBufferToDisk()
     std::string filename = "audio_output_" + std::to_string(m_fileCount++) + ".wav";
     fileWriter.saveToWav(filename, audioBufferCopy, MAX_BUFFER_SIZE, 16, SAMPLE_RATE, CHANNELS);
 }
+
+RtpServerManager::~RtpServerManager()
+{
+    AudioFileWriter fileWriter{};
+    fileWriter.mergeWavFiles("audio_otuput.wav", "audio_output_", m_fileCount);
+}

@@ -7,12 +7,15 @@
 
 // Global flag for graceful shutdown (Ctrl + C)
 std::atomic<bool> keepRunning(true);
+boost::asio::io_context *io_ctx_ptr = nullptr;
 
 void signalHandler(int signum)
 {
     std::cout << "\nInterrupt signal (" << signum << ") received. Exiting..." << std::endl;
+    io_ctx_ptr->stop();
     keepRunning = false;
 }
+
 int main(int argc, char **argv)
 {
 
@@ -23,10 +26,12 @@ int main(int argc, char **argv)
     }
 
     std::string service = argv[1];
+    signal(SIGINT, signalHandler);
 
     if (service == "server")
     {
         boost::asio::io_context io_ctx{};
+        io_ctx_ptr = &io_ctx;
 
         RtpServer rtpServer{io_ctx, 5000};
 
@@ -38,11 +43,10 @@ int main(int argc, char **argv)
     {
 
         // Register signal handler for Ctrl + C
-        signal(SIGINT, signalHandler);
-
         try
         {
             boost::asio::io_context io_ctx{};
+            io_ctx_ptr = &io_ctx;
             RtpClient rtpClient{io_ctx, "127.0.0.1", "5000"};
             AudioRecorder recorder(8000, 256, 1, std::move(rtpClient)); // 8kHz, 256 frames per buffer, mono, 10 seconds
             PTTManager pttManager(recorder);
@@ -75,7 +79,6 @@ int main(int argc, char **argv)
 
             std::cout << "Stopped recording audio" << std::endl;
 
-            io_ctx.stop();
             ioThread.join();
         }
         catch (const std::exception &e)

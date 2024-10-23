@@ -13,6 +13,7 @@ public:
 
 public:
     RtpServer(boost::asio::io_context &io_ctx, unsigned short port);
+    ~RtpServer();
 
     void recieveDataFromClient();
     void sendDataToClient();
