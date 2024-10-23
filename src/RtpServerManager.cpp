@@ -16,11 +16,13 @@ void RtpServerManager::addClient(uint32_t ssrc, rtpClientInfo &client)
 
     if (it == m_rtpSessions.end())
     {
+        // Set client's joined time (relative to the server's initiation)
         client.joinedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_serverCreationTime);
         m_rtpSessions[ssrc] = client;
     }
     else
     {
+        // Set client's RTP information
         it->second.sequenceNumber = client.sequenceNumber;
         it->second.timestamp = client.timestamp;
     }
@@ -64,6 +66,7 @@ void RtpServerManager::manageBuffer(uint32_t ssrc, const uint8_t *data, size_t l
 
 void RtpServerManager::startFlushTimer()
 {
+    // Flush buffer in DURATION seconds interval
     m_flushTimer.async_wait([this](const boost::system::error_code &ec)
                             {
             if (!ec) {
@@ -89,6 +92,7 @@ void RtpServerManager::flushBufferToDisk()
 
 RtpServerManager::~RtpServerManager()
 {
+    // Merge all audio output files upon destruction
     AudioFileWriter fileWriter{};
     fileWriter.mergeWavFiles("audio_otuput.wav", "audio_output_", m_fileCount);
 }

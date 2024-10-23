@@ -11,6 +11,7 @@ RtpClient::RtpClient(boost::asio::io_context &io_ctx, const std::string &host, c
     m_endpoint = *endpoints.begin();
 }
 
+// Move constructor
 RtpClient::RtpClient(RtpClient &&other) noexcept
     : m_socket(std::move(other.m_socket)),
       m_endpoint(std::move(other.m_endpoint)),
@@ -60,6 +61,8 @@ void RtpClient::sendAudioData(const float *audioBuffer, size_t length)
                                    std::cout << ec.message() << '\n';
                                }
                            });
+
+    // For RTP Header
     m_sequenceNumber++;
     m_timestamp += length;
 }

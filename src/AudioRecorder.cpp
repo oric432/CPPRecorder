@@ -23,6 +23,7 @@ AudioRecorder::~AudioRecorder()
 
 bool AudioRecorder::startRecording()
 {
+    // Open the default device for a stream and set the appropriate data as well as a callback funciton for each sample
     PaError err = Pa_OpenDefaultStream(&m_stream, m_recorderData.channels, 0, paFloat32, m_recorderData.sampleRate, m_recorderData.framesPerBuffer, recordCallback, &m_recorderData);
     if (err != paNoError)
     {
@@ -30,6 +31,7 @@ bool AudioRecorder::startRecording()
         return false;
     }
 
+    // Start streaming
     err = Pa_StartStream(m_stream);
     if (err != paNoError)
     {
@@ -70,23 +72,29 @@ int AudioRecorder::recordCallback(const void *inputBuffer, void *outputBuffer,
     const float *rptr = static_cast<const float *>(inputBuffer);
     long framesLeft = framesPerBuffer;
 
+    // Check if PTT is pressed or not
     bool currentPTTState;
     {
         std::lock_guard<std::mutex> lock(recorderData->mtx);
         currentPTTState = recorderData->pttPressed;
     }
 
+    // Allocate space for the audio data
     float audioData[framesLeft * recorderData->channels];
 
+    // If PTT is pressed and there are samples in the buffer
     if (currentPTTState && inputBuffer != nullptr)
     {
+        // Copy smaples to audio datas
         std::memcpy(audioData, rptr, framesLeft * sizeof(float) * recorderData->channels);
         std::cout << framesLeft << " Bytes have been written to the buffer" << '\n';
 
+        // Send audio data over RTP / UDP
         recorderData->m_client.sendAudioData(audioData, framesLeft * recorderData->channels);
     }
     else
     {
+        // Update the timestamp even though packets were not sent (used for synchronization)
         recorderData->m_client.setTimestamp(recorderData->m_client.getTimestamp() + framesLeft * recorderData->channels);
     }
 

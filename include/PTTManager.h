@@ -19,7 +19,6 @@ private:
     std::atomic<bool> monitoring;
     std::thread pttThread;
 
-    // Functions to set terminal to non-blocking mode
     void setNonBlocking(bool enable);
 };
 

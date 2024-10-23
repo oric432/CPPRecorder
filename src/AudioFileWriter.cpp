@@ -1,6 +1,5 @@
 #include "AudioFileWriter.h"
 
-// Save the recorded data to a WAV file
 void AudioFileWriter::saveToWav(const std::string &filename, const int16_t *audioData, size_t dataSize, int bitsPerSample, int sampleRate, int numChannels)
 {
     // Open file in binary mode
@@ -26,7 +25,6 @@ void AudioFileWriter::saveToWav(const std::string &filename, const int16_t *audi
     std::cout << "Audio data saved to " << filename << std::endl;
 }
 
-// Write the WAV file header
 void AudioFileWriter::writeWavHeader(std::ofstream &outFile, int sampleRate, int numChannels, int bitsPerSample, int dataSize)
 {
     int chunkSize = 36 + dataSize;
@@ -87,13 +85,11 @@ void AudioFileWriter::updateWavHeader(std::ofstream &outFile, std::uint32_t tota
     outFile.write(reinterpret_cast<const char *>(&totalDataSize), 4);
 }
 
-// Construct filename from prefix and index
 std::string AudioFileWriter::constructFilename(const std::string &prefix, size_t index)
 {
     return prefix + std::to_string(index) + ".wav"; // Assuming the files are .wav
 }
 
-// Merge WAV files using a prefix and a count
 void AudioFileWriter::mergeWavFiles(const std::string &outputFilename, const std::string &prefix, size_t count)
 {
     if (count == 0)

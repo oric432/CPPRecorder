@@ -27,7 +27,7 @@ public:
     bool startRecording();
     void stopRecording();
     bool isRecording() const;
-    void setPTTState(bool pttPressed); // To control recording based on PTT state
+    void setPTTState(bool pttPressed);
 
 private:
     static int recordCallback(const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer,

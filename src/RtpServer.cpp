@@ -13,6 +13,7 @@ RtpServer::~RtpServer()
 
 void RtpServer::recieveDataFromClient()
 {
+    // Recieve RTP data from the client
     m_socket.async_receive(
         boost::asio::buffer(m_data, MAX_LENGTH),
         [this](const boost::system::error_code &ec, std::size_t bytes_recvd)
@@ -32,6 +33,7 @@ void RtpServer::recieveDataFromClient()
                           << client.sequenceNumber << "\n"
                           << client.timestamp << "\n";
 
+                // Merge incoming data from a client to an existing audio buffer
                 m_rtpServerManager.manageBuffer(ssrc, m_data + RTP_HEADER_SIZE, bytes_recvd - RTP_HEADER_SIZE);
             }
 
