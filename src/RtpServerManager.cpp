@@ -4,9 +4,12 @@
 #include <cstring>
 #include <thread>
 
-RtpServerManager::RtpServerManager() : m_serverCreationTime(std::chrono::steady_clock::now())
+RtpServerManager::RtpServerManager(boost::asio::io_context &io_ctx) : m_serverCreationTime(std::chrono::steady_clock::now()),
+                                                                      io_ctx(io_ctx), flush_timer_(io_ctx, std::chrono::milliseconds(10000))
 {
+    startFlushTimer();
 }
+
 void RtpServerManager::addClient(uint32_t ssrc, rtpClientInfo &client)
 {
     auto it = m_rtpSessions.find(ssrc);
@@ -36,7 +39,7 @@ void RtpServerManager::manageBuffer(uint32_t ssrc, const uint8_t *data, size_t l
     size_t floatSamplesLength = length / sizeof(float); // Number of float samples
 
     // Calculate the index based on joined time and timestamp
-    size_t index = ((client.joinedTime.count() * SAMPLE_RATE / 1000) + client.timestamp) - some;
+    size_t index = ((client.joinedTime.count() * SAMPLE_RATE / 1000) + client.timestamp) % (MAX_BUFFER_SIZE / 2);
 
     std::cout << "Joined Time (seconds): " << client.joinedTime.count() / 1000 << std::endl;
     std::cout << "Calculated Index: " << index << std::endl;
@@ -61,18 +64,43 @@ void RtpServerManager::manageBuffer(uint32_t ssrc, const uint8_t *data, size_t l
     }
     else
     {
-        some = index;
+        std::cout << "Missed Packet" << '\n';
     }
 
+    // // Create a copy of the current buffer for saving to file
+    // int16_t audioBufferCopy[MAX_BUFFER_SIZE];
+    // std::memcpy(audioBufferCopy, m_audioBuffer, MAX_BUFFER_SIZE);
+
+    // // Start a new thread to save the buffer to a WAV file
+    // std::thread([this, audioBufferCopy]() mutable
+    //             {
+    //                 AudioFileWriter fileWriter{};
+    //                 std::string filename = "audio_output_" + std::to_string(m_fileCount++) + ".wav";
+    //                 fileWriter.saveToWav(filename, audioBufferCopy, MAX_BUFFER_SIZE, 16, SAMPLE_RATE, CHANNELS); })
+    //     .detach();
+}
+
+void RtpServerManager::startFlushTimer()
+{
+    flush_timer_.async_wait([this](const boost::system::error_code &ec)
+                            {
+            if (!ec) {
+                m_serverCreationTime = std::chrono::steady_clock::now();
+                flushBufferToDisk();
+                flush_timer_.expires_at(flush_timer_.expiry() + std::chrono::milliseconds(10000));
+                startFlushTimer();
+            } });
+}
+
+void RtpServerManager::flushBufferToDisk()
+{
     // Create a copy of the current buffer for saving to file
     int16_t audioBufferCopy[MAX_BUFFER_SIZE];
     std::memcpy(audioBufferCopy, m_audioBuffer, MAX_BUFFER_SIZE);
+    std::memset(m_audioBuffer, 0, MAX_BUFFER_SIZE);
 
     // Start a new thread to save the buffer to a WAV file
-    std::thread([this, audioBufferCopy]() mutable
-                {
-                    AudioFileWriter fileWriter{};
-                    std::string filename = "audio_output_" + std::to_string(m_fileCount++) + ".wav";
-                    fileWriter.saveToWav(filename, audioBufferCopy, MAX_BUFFER_SIZE, 16, SAMPLE_RATE, CHANNELS); })
-        .detach();
+    AudioFileWriter fileWriter{};
+    std::string filename = "audio_output_" + std::to_string(m_fileCount++) + ".wav";
+    fileWriter.saveToWav(filename, audioBufferCopy, MAX_BUFFER_SIZE, 16, SAMPLE_RATE, CHANNELS);
 }

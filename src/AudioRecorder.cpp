@@ -85,6 +85,10 @@ int AudioRecorder::recordCallback(const void *inputBuffer, void *outputBuffer,
 
         recorderData->m_client.sendAudioData(audioData, framesLeft * recorderData->channels);
     }
+    else
+    {
+        recorderData->m_client.setTimestamp(recorderData->m_client.getTimestamp() + framesLeft * recorderData->channels);
+    }
 
     return paContinue;
 }

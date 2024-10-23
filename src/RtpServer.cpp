@@ -1,7 +1,8 @@
 #include "RtpServer.h"
 #include "Utils.h"
 
-RtpServer::RtpServer(boost::asio::io_context &io_ctx, unsigned short port) : m_socket(io_ctx, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port))
+RtpServer::RtpServer(boost::asio::io_context &io_ctx, unsigned short port) : m_socket(io_ctx, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port)),
+                                                                             m_rtpServerManager(io_ctx)
 {
     std::cout << "Server is up and running" << std::endl;
 }
