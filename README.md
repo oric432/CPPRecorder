@@ -51,10 +51,13 @@ This project is an audio recording application built in C++ using PortAudio for 
 Run the compiled application from the build directory:
 
 ```bash
-./SomeCodeProject
+./CPPRecorder/build
 ```
 
 To start recording, ensure your microphone is set up and use the designated key to activate the push-to-talk feature.
+
+Space - start PTT 
+Enter - stop PTT
 
 ## License
 
