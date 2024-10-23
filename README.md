@@ -56,8 +56,8 @@ Run the compiled application from the build directory:
 
 To start recording, ensure your microphone is set up and use the designated key to activate the push-to-talk feature.
 
-Space - start PTT 
-Enter - stop PTT
+- Space - start PTT 
+- Enter - stop PTT
 
 ## License
 
