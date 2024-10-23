@@ -102,7 +102,6 @@ void AudioFileWriter::mergeWavFiles(const std::string &outputFilename, const std
         return;
     }
 
-    // Open the output file for writing
     std::ofstream outFile(outputFilename, std::ios::binary);
     if (!outFile)
     {
@@ -121,14 +120,14 @@ void AudioFileWriter::mergeWavFiles(const std::string &outputFilename, const std
     }
 
     // Read and write the header of the first file
-    std::vector<char> header(44);
+    std::vector<char> header(WAV_HEADER_SIZE);
     firstFile.read(header.data(), header.size());
     outFile.write(header.data(), header.size());
 
     // Append the audio data of the first file
-    firstFile.seekg(44, std::ios::beg); // Skip header
+    firstFile.seekg(WAV_HEADER_SIZE, std::ios::beg); // Skip header
     appendAudioData(firstFile, outFile);
-    totalDataSize += firstFile.tellg() - 44;
+    totalDataSize += static_cast<std::streamoff>(firstFile.tellg()) - WAV_HEADER_SIZE;
 
     // Process the remaining files (append their data only)
     for (size_t i = 1; i < count; ++i)
@@ -141,14 +140,14 @@ void AudioFileWriter::mergeWavFiles(const std::string &outputFilename, const std
         }
 
         // Skip the header of the current file
-        inputFile.seekg(44, std::ios::beg);
+        inputFile.seekg(WAV_HEADER_SIZE, std::ios::beg);
 
         // Append the audio data to the output file
         appendAudioData(inputFile, outFile);
 
         // Accumulate total data size
         inputFile.seekg(0, std::ios::end);
-        totalDataSize += inputFile.tellg() - 44;
+        totalDataSize += static_cast<std::streamoff>(inputFile.tellg()) - WAV_HEADER_SIZE;
     }
 
     // Update the header of the output file with the correct data size

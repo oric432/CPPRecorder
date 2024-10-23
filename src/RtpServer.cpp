@@ -8,7 +8,7 @@ RtpServer::RtpServer(boost::asio::io_context &io_ctx, unsigned short port) : m_s
 }
 RtpServer::~RtpServer()
 {
-    std::cout << "whattttttt" << std::endl;
+    m_socket.close();
 }
 
 void RtpServer::recieveDataFromClient()

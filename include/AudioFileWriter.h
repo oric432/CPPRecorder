@@ -10,7 +10,8 @@
 class AudioFileWriter
 {
 public:
-    static const size_t BUFFER_SIZE = 4096;
+    static constexpr size_t BUFFER_SIZE = 4096;
+    static constexpr int WAV_HEADER_SIZE = 44;
 
 public:
     // Save a single audio file

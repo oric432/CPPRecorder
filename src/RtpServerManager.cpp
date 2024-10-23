@@ -5,7 +5,7 @@
 #include <thread>
 
 RtpServerManager::RtpServerManager(boost::asio::io_context &io_ctx) : m_serverCreationTime(std::chrono::steady_clock::now()),
-                                                                      m_io_ctx(io_ctx), m_flushTimer(io_ctx, std::chrono::milliseconds(DURATION))
+                                                                      m_io_ctx(io_ctx), m_flushTimer(io_ctx, std::chrono::seconds(DURATION))
 {
     startFlushTimer();
 }
@@ -60,22 +60,6 @@ void RtpServerManager::manageBuffer(uint32_t ssrc, const uint8_t *data, size_t l
         std::memcpy(m_audioBuffer + index, pcmBuffer.data(), pcmDataSize);
         return;
     }
-    else
-    {
-        std::cout << "Missed Packet" << '\n';
-    }
-
-    // // Create a copy of the current buffer for saving to file
-    // int16_t audioBufferCopy[MAX_BUFFER_SIZE];
-    // std::memcpy(audioBufferCopy, m_audioBuffer, MAX_BUFFER_SIZE);
-
-    // // Start a new thread to save the buffer to a WAV file
-    // std::thread([this, audioBufferCopy]() mutable
-    //             {
-    //                 AudioFileWriter fileWriter{};
-    //                 std::string filename = "audio_output_" + std::to_string(m_fileCount++) + ".wav";
-    //                 fileWriter.saveToWav(filename, audioBufferCopy, MAX_BUFFER_SIZE, 16, SAMPLE_RATE, CHANNELS); })
-    //     .detach();
 }
 
 void RtpServerManager::startFlushTimer()
@@ -85,7 +69,7 @@ void RtpServerManager::startFlushTimer()
             if (!ec) {
                 m_serverCreationTime = std::chrono::steady_clock::now();
                 flushBufferToDisk();
-                m_flushTimer.expires_at(m_flushTimer.expiry() + std::chrono::milliseconds(DURATION));
+                m_flushTimer.expires_at(m_flushTimer.expiry() + std::chrono::seconds(DURATION));
                 startFlushTimer();
             } });
 }

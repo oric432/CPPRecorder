@@ -21,7 +21,7 @@ public:
     static const int SAMPLE_RATE = 8000;
     static const int FRAMES_PER_BUFFER = 256;
     static const int CHANNELS = 1;
-    static const int DURATION = 10;
+    static constexpr int DURATION = 10;
 
 public:
     RtpServerManager(boost::asio::io_context &io_ctx);
