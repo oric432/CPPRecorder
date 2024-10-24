@@ -88,6 +88,43 @@ void convertFloatToPCM(const float *input, int16_t *output, size_t length)
     {
         // Clamp the float sample between -1.0 and 1.0 and scale to 16-bit
         float sample = std::clamp(input[i], -1.0f, 1.0f);
-        output[i] = static_cast<int16_t>(sample * 32767);
+        output[i] = static_cast<int16_t>(sample * INT16_MAX);
+    }
+}
+
+void mergeAudioData(int16_t *m_audioBuffer, size_t index, const std::vector<int16_t> &pcmBuffer, size_t pcmDataSize, size_t maxBufferSize)
+{
+    // Check if the new data can fit in the buffer without exceeding bounds
+    if (index + pcmDataSize > maxBufferSize / sizeof(int16_t))
+    {
+        pcmDataSize = (maxBufferSize / sizeof(int16_t)) - index;
+    }
+
+    for (size_t i = 0; i < pcmDataSize; ++i)
+    {
+        // Position in original buffer
+        size_t pos = index + i;
+
+        if (pos < maxBufferSize / sizeof(int16_t))
+        {
+            // Safeguard to prevent overflow when adding two int16_t's
+            if (m_audioBuffer[pos] != 0)
+            {
+                int32_t mixedSample = (static_cast<int32_t>(m_audioBuffer[pos]) + static_cast<int32_t>(pcmBuffer[i])) / 2;
+
+                // Clip to avoid overflow beyond 16-bit range
+                if (mixedSample > INT16_MAX)
+                    mixedSample = INT16_MAX;
+                else if (mixedSample < INT16_MIN)
+                    mixedSample = INT16_MIN;
+
+                // Casing back to int16_t
+                m_audioBuffer[pos] = static_cast<int16_t>(mixedSample);
+            }
+            else
+            {
+                m_audioBuffer[pos] = pcmBuffer[i];
+            }
+        }
     }
 }

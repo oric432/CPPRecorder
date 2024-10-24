@@ -12,19 +12,16 @@ RtpServerManager::RtpServerManager(boost::asio::io_context &io_ctx) : m_serverCr
 
 void RtpServerManager::addClient(uint32_t ssrc, rtpClientInfo &client)
 {
-    auto it = m_rtpSessions.find(ssrc);
-
-    if (it == m_rtpSessions.end())
+    auto [it, inserted] = m_rtpSessions.emplace(ssrc, client);
+    if (!inserted)
     {
-        // Set client's joined time (relative to the server's initiation)
-        client.joinedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_serverCreationTime);
-        m_rtpSessions[ssrc] = client;
+        it->second.sequenceNumber = client.sequenceNumber;
+        it->second.timestamp = client.timestamp;
     }
     else
     {
-        // Set client's RTP information
-        it->second.sequenceNumber = client.sequenceNumber;
-        it->second.timestamp = client.timestamp;
+        it->second.joinedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - m_serverCreationTime);
     }
 }
 
@@ -35,13 +32,19 @@ void RtpServerManager::removeClient(uint32_t ssrc)
 
 void RtpServerManager::manageBuffer(uint32_t ssrc, const uint8_t *data, size_t length)
 {
-    rtpClientInfo client = m_rtpSessions.find(ssrc)->second;
+    auto it = m_rtpSessions.find(ssrc);
+    if (it == m_rtpSessions.end())
+    {
+        std::cout << "Client not found" << "\n";
+        return;
+    }
+    rtpClientInfo client = it->second;
 
     // Ensure length is in float samples, not bytes
-    size_t floatSamplesLength = length / sizeof(float); // Number of float samples
+    size_t floatSamplesLength = length / sizeof(float);
 
     // Calculate the index based on joined time and timestamp
-    size_t index = ((client.joinedTime.count() * SAMPLE_RATE / 1000) + client.timestamp) % (MAX_BUFFER_SIZE / 2);
+    size_t index = ((client.joinedTime.count() * SAMPLE_RATE / 1000) + client.timestamp) % (MAX_BUFFER_SIZE / sizeof(int16_t));
 
     std::cout << "Joined Time (seconds): " << client.joinedTime.count() / 1000 << std::endl;
     std::cout << "Calculated Index: " << index << std::endl;
@@ -59,7 +62,8 @@ void RtpServerManager::manageBuffer(uint32_t ssrc, const uint8_t *data, size_t l
     if (index + pcmDataSize <= MAX_BUFFER_SIZE / sizeof(int16_t))
     {
         // Copy the PCM data to the buffer
-        std::memcpy(m_audioBuffer + index, pcmBuffer.data(), pcmDataSize);
+        // std::memcpy(m_audioBuffer + index, pcmBuffer.data(), pcmDataSize);
+        mergeAudioData(m_audioBuffer, index, pcmBuffer, pcmBuffer.size(), MAX_BUFFER_SIZE);
         return;
     }
 }
